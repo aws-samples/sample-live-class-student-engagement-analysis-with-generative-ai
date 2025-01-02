@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Description: CloudFormation template to configure S3 buckets, Lambda functions, and necessary permissions.
+
+Resources:
+  EvaluateScreenshotFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions/evaluate-screenshot-function/
+      Handler: index.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          username: ""
+          password: ""
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
