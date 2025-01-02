@@ -1,0 +1,638 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to configure S3 buckets, Lambda functions, and necessary permissions.
+
+Parameters:
+  IVSScreenshotBucket:
+    Description: The name of the S3 bucket
+    Type: String
+  
+  DynamoDBForAllData:
+    Description: The name of the DynamoDB table
+    Type: String
+
+  ThumbnailProcessingQueue:
+    Type: String
+    Description: Name of the SQS queue to create
+  
+  UniqueQuestionQueue:
+    Type: String
+    Description: Name of the SQS queue to create
+
+Resources:
+  MyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref ThumbnailProcessingQueue
+      VisibilityTimeout: 900
+  
+  MyQueue1:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref UniqueQuestionQueue
+      VisibilityTimeout: 900
+
+  MyS3BucketSource:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Ref IVSScreenshotBucket
+    
+  S3LambdaPermissionsPolicyForEvent:
+    Type: 'AWS::IAM::ManagedPolicy'
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - s3:PutBucketNotification
+              - s3:GetBucketNotification
+            Resource:
+              - !Sub "arn:aws:s3:::${MyS3BucketSource}"
+              - !Sub "arn:aws:s3:::${MyS3BucketSource}/*"
+
+
+  LambdaRoleForEvent:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 'lambda.amazonaws.com'
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        - !Ref S3LambdaPermissionsPolicyForEvent
+
+  CreateEventNotificationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaRoleForEvent.Arn
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref MyS3BucketSource
+          SQS_QUEUE_ARN: !GetAtt MyQueue.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          def create_s3_bucket_notification(bucket_name, sqs_queue_arn):
+              s3 = boto3.resource('s3')
+              events = ['s3:ObjectCreated:*']
+              notification_config = {
+                  'QueueConfigurations': [
+                      {
+                          'QueueArn': sqs_queue_arn,
+                          'Events': events,
+                          'Filter': {
+                              'Key': {
+                                  'FilterRules': [
+                                      {
+                                          'Name': 'suffix',
+                                          'Value': '.jpeg'
+                                      }
+                                  ]
+                              }
+                          }
+                      }
+
+                  ]
+              }
+              bucket_notification = s3.BucketNotification(bucket_name)
+              
+              try:
+                  response = bucket_notification.put(NotificationConfiguration=notification_config)
+                  return response
+              except Exception as e:
+                  print("Error setting bucket notification:", e)
+                  return None
+          
+          def lambda_handler(event, context):
+              region = os.environ['AWS_REGION']
+              bucket_name = os.environ['BUCKET_NAME']
+              sqs_queue_arn = os.environ['SQS_QUEUE_ARN']
+              response = create_s3_bucket_notification(bucket_name, sqs_queue_arn)
+              print("Bucket notification configuration response:", response)
+              return {
+                  "statusCode": 200,
+                  "body": "S3 bucket notification configuration created."
+              }
+      Timeout: 900
+    DependsOn: 
+      - MyS3BucketSource
+      - MyQueue
+      - MyQueuePolicy
+
+  MyLambdaRoleForEventNotification:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: scheduler.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: MyLambdaPolicy-haiku-question-bot
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "lambda:InvokeFunction"
+                Resource: !GetAtt CreateEventNotificationFunction.Arn
+
+
+  MySchedulerSchedule:
+    Type: AWS::Scheduler::Schedule
+    Properties:
+      Description: "Scheduler for creating event notification"
+      FlexibleTimeWindow:
+        Mode: "OFF"
+      GroupName: "default"
+      ScheduleExpression: "rate(10000 days)"
+      ScheduleExpressionTimezone: "UTC"
+      State: "ENABLED"
+      Target:
+        Arn: !GetAtt CreateEventNotificationFunction.Arn
+        RoleArn: !GetAtt MyLambdaRoleForEventNotification.Arn 
+    DependsOn: CreateEventNotificationFunction 
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaBasicExecution
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt MyQueue.Arn
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                  - sqs:SendMessage
+                Resource: !GetAtt MyQueue1.Arn
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                Resource: "*"
+               
+  LambdaFunctionForQuesAndTranscript:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          DYNAMODB_NAME: !Ref MyDynamoDBTable
+          QUEUE_URL: !GetAtt MyQueue1.QueueUrl 
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import base64
+          from botocore.exceptions import ClientError
+          import datetime
+          import time
+          import os
+          import boto3
+          from boto3.dynamodb.conditions import Key
+
+          region = os.environ['AWS_REGION']
+
+          bedrock = boto3.client(service_name="bedrock-runtime",region_name=region)
+          dynamodb = boto3.resource('dynamodb', region_name=region)
+          dynamodb_name = os.environ['DYNAMODB_NAME'] #"question-bot-haiku-ddbtable-13579"
+          queue_url = os.environ['QUEUE_URL'] 
+          table1 = dynamodb.Table(dynamodb_name)
+          s3_client = boto3.client('s3')
+          sqs = boto3.client('sqs')
+
+          modelId = "anthropic.claude-3-sonnet-20240229-v1:0" #"anthropic.claude-3-haiku-20240307-v1:0"
+
+          accept = "application/json"
+          contentType = "application/json"
+
+          prompt_transcript = '''
+          Analyze the image and extract the key educational information, including any relevant questions, answers, or educational content. Format the extracted text into a structured, readable format. Just focus on the educational content while maintaining the essence of the original text. Give the transcript as it is.
+          Give the translated text into english language. 
+          '''
+
+          prompt_compare_transcript = '''
+          If the similarity between two transcripts is greater than 80%, return "result": "True". Otherwise, return "result": "False". Don't give any explaination or code.
+
+          You are tasked with comparing two transcripts,
+          Transcript A: [{}]
+
+          and
+
+          Transcript B: [{}]
+          '''
+
+          prompt_generate_question = '''
+          Case 1: Assume the role of a AWS Cloud teacher, If the transcript contains a question, use the same question directly for the multiple-choice question generation. If not, formulate a new multiple-choice question based on the generated transcript to assess student attentiveness in class. Assume your role as AWS cloud teacher teaching students for cloud certification. Your job is to take test of student by generating questions which are relevent to them. 
+          Generate question from transcript only. Don't include text inside [] bracket in transcript, or dont include date or footprint, only consider content realted to cloud.  The question should include four options, with one correct answer. Return the output in the following JSON format and without additional commentary and generate question only in english language:
+          {
+            "question": "<generated question>",
+            "options": ["<option 1>", "<option 2>", "<option 3>", "<option 4>"],
+            "solution": "<correct option>",
+            "result": "True"
+          }
+
+          Case 2: Do not generate a question if the image:
+          - dont ask question regarding size of file, or date of PPT, only ask question related to educational content.
+          - Contains only a logo or irrelevant graphics such as simple shapes, colors, generic symbols, or specific letters.
+          - Displays single words, a Welcome page, or any screenshots that show a desktop or application interface. This includes browsers, pdf, chat applications, and any visible file management or folder structure, or if any thing forwarded in chat.
+          - Features file-related information visible on a computer or device screen, such as file names, sizes, types, or chat messages and document names.
+          - Contains fewer than 8 total words where the text does not provide substantial content for creating a meaningful educational question.
+          - Shows handwritten content on a chalkboard.
+          - Includes background elements or text that do not contribute directly to a meaningful educational topic or context.
+          - Do not generate question like by mentioning word like AWS
+
+          If an image meets any of the above criteria and is deemed not suitable for question generation, return the following JSON response:
+          {
+            "result": "False"
+          }
+
+
+          Ensure to evaluate the content of the image strictly and generate a response for either Case 1 or Case 2 based on the content's relevance and substantiality. Do not return outputs for both cases. Do not add additional commentary.
+          '''
+
+          def get_latest_entry(table_name, path):
+              # Create a DynamoDB client
+              dynamodb = boto3.resource('dynamodb')
+              table = dynamodb.Table(table_name)
+
+              # Query to fetch the latest entry for the given date
+              response = table.query(
+                  KeyConditionExpression=Key('Path').eq(path),
+                  ScanIndexForward=False,  # This will sort the results by sort key in descending order
+                  Limit=1  # Return only the latest entry
+              )
+
+              # Extract the latest entry from the response
+              items = response.get('Items')
+              if items:
+                  return items[0]['Transcript']  # Return the latest entry
+              else:
+                  return None  # No entries found for the given date
+
+          def get_data_from_model(prompt, image):
+              request_body = {
+                  "anthropic_version": "bedrock-2023-05-31",
+                  "max_tokens": 2048,
+                  "messages": [
+                      {
+                          "role": "user",
+                          "content": [
+                              {
+                                  "type": "text",
+                                  "text": prompt,
+                              },
+                              {
+                                  "type": "image",
+                                  "source": {
+                                      "type": "base64",
+                                      "media_type": "image/jpeg",
+                                      "data": image,
+                                  },
+                              },
+                          ],
+                      }
+                  ],
+              }
+
+              # Invoke haiku model to get transcript
+              response = bedrock.invoke_model(
+                  modelId=modelId,
+                  body=json.dumps(request_body),
+              )
+              result = json.loads(response.get("body").read())
+              return result
+
+          def get_result_from_model(prompt):
+              request_body = {
+                  "anthropic_version": "bedrock-2023-05-31",
+                  "max_tokens": 2048,
+                  "messages": [
+                      {
+                          "role": "user",
+                          "content": [
+                              {
+                                  "type": "text",
+                                  "text": prompt,
+                              }
+                          ],
+                      }
+                  ],
+              }
+
+              # Invoke haiku model to get transcript
+              response = bedrock.invoke_model(
+                  modelId=modelId,
+                  body=json.dumps(request_body),
+              )
+              result = json.loads(response.get("body").read())
+              return result
+
+          def lambda_handler(event, context):
+              ########### Read it from sqs
+              for record in event['Records']:
+                  message_body = json.loads(record['body'])
+                  s3_event = message_body['Records'][0]
+                  curr_ts = s3_event['eventTime']
+                  bucket = s3_event['s3']['bucket']['name']
+                  key = s3_event['s3']['object']['key']
+
+              print(bucket)
+              print(key)
+
+              # bucket = "question-bot-haiku-bucket-13579"
+              # key = "test/physics/id1/thumb2.jpeg"
+
+              path = key.split("/")
+              img = path.pop()
+              path = "/".join(path)
+
+              local_path = '/tmp/' + os.path.basename(key)
+              s3_client.download_file(bucket, key, local_path)
+
+              with open(local_path, "rb") as image_file:
+                  image = base64.b64encode(image_file.read()).decode("utf8")
+
+              last_transcript=get_latest_entry(dynamodb_name,path)
+
+              result = get_data_from_model(prompt_transcript, image)
+              output_list = result.get("content", [])
+              transcript = output_list[0]['text']
+              print("=========> ",transcript)
+
+              prompt_compare_transcript_new = prompt_compare_transcript.format(last_transcript, transcript)
+              result_compare = get_result_from_model(prompt_compare_transcript_new)
+              output_list_compare = result_compare.get("content", [])
+              transcript_compare = output_list_compare[0]['text']
+              print(">>>>>>>>>>>", transcript_compare)
+
+              match_or_not = False
+              # if '"result": "True"' in transcript_compare:
+              #     match_or_not = True
+
+              # print("-----------",match_or_not)
+
+              if match_or_not == True:
+                  print("Question already generated, Not generating question.............")
+                  response = table1.put_item(
+                      Item={
+                          'Path': path,  # Partition key
+                          'Timestamp': curr_ts, # Sort key
+                          'Image name':img,
+                          'Transcript':transcript,
+                          'match': 'True'
+                      }
+                  )
+              else:
+                  start_prompt = " Given this transcript : " + transcript + "\n\n"
+                  prompt_generate_question_mod = start_prompt + prompt_generate_question
+                  result_question = get_result_from_model(prompt_generate_question_mod)
+                  output_list_question = result_question.get("content", [])
+                  ques_ans_opts_transcript = output_list_question[0]['text']
+                  print("\n",ques_ans_opts_transcript)
+                  if '"result": "False"' in ques_ans_opts_transcript:
+                      response = table1.put_item(
+                          Item={
+                              'Path': path,  # Partition key
+                              'Timestamp': curr_ts, # Sort key
+                              'Image name':img,
+                              'Transcript':transcript,
+                          }
+                      )
+                  else:
+                      try:
+                          final_values = json.loads(ques_ans_opts_transcript)
+                      except:
+                          try:
+                              json_str = ques_ans_opts_transcript.split("{", 1)[1].rsplit("}", 1)[0]
+                              json_str = "{" + json_str + "}"
+                              final_values = json.loads(json_str)
+                          except:
+                              print("SKIPPING IMAGE .........")
+                      curr_quest = final_values['question']
+                      curr_options = final_values['options']
+                      curr_sol = final_values['solution']
+                      response = table1.put_item(
+                          Item={
+                              'Path': path,  # Partition key
+                              'Timestamp': curr_ts, # Sort key
+                              'Question': curr_quest,
+                              'Options':curr_options,
+                              'Solution':curr_sol,
+                              'Transcript':transcript,
+                              'Image name':img
+                          }
+                      )
+
+                      # Send generated output to sqs queue
+                      message_body = {'Question': curr_quest,'Options':curr_options,'Solution':curr_sol}
+                      response = sqs.send_message(
+                          QueueUrl=queue_url,
+                          MessageBody=json.dumps(message_body)
+                      )
+
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('Successfully done...')
+              }
+          
+      Handler: index.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: python3.12
+      Timeout: 900
+  
+  LambdaSQSPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFunctionForQuesAndTranscript.Arn
+      Action: lambda:InvokeFunction
+      Principal: sqs.amazonaws.com
+      SourceArn: !GetAtt MyQueue.Arn
+
+  MyQueueEventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      EventSourceArn: !GetAtt MyQueue.Arn
+      FunctionName: !GetAtt LambdaFunctionForQuesAndTranscript.Arn
+      Enabled: true
+
+  MyDynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: !Ref DynamoDBForAllData
+      AttributeDefinitions:
+        - AttributeName: Path
+          AttributeType: S
+        - AttributeName: Timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Path
+          KeyType: HASH
+        - AttributeName: Timestamp
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  MyQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref MyQueue
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLambdaAndS3ToSQS
+            Effect: Allow
+            Principal:
+              Service: 
+                - "lambda.amazonaws.com"
+                - "s3.amazonaws.com"
+            Action:
+              - "sqs:SendMessage"  # Adjust actions as per your specific requirements
+              - "sqs:ReceiveMessage"  # Example additional action for SQS
+              - "s3:GetObject"  # Example S3 action
+            Resource: !GetAtt MyQueue.Arn
+            Condition:
+              StringEquals:
+                aws:SourceArn: !GetAtt MyS3BucketSource.Arn  # Condition for S3 source ARN
+    DependsOn:
+      - MyQueue
+
+
+  LambdaFunctionToRecieveUniqueQuestion:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler  # Adjust the handler to match your Python file and function name
+      Runtime: python3.12  # Use Python 3.8 runtime (adjust as needed)
+      Timeout: 900
+      Role: !GetAtt LambdaExecutionRole1.Arn
+      Code:
+        ZipFile: |
+          import json
+
+          def lambda_handler(event, context):
+              # Log the received event
+              print("Received event: " + json.dumps(event, indent=2))
+
+              # Return a success response
+              return {
+                  'statusCode': 200,
+                  'body': json.dumps('SQS event processed successfully')
+              }
+
+  LambdaExecutionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaSQSPolicy1
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt MyQueue1.Arn
+
+  LambdaSQSPermission1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt LambdaFunctionToRecieveUniqueQuestion.Arn
+      Action: lambda:InvokeFunction
+      Principal: sqs.amazonaws.com
+      SourceArn: !GetAtt MyQueue1.Arn
+
+  MyQueueEventSourceMapping1:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      BatchSize: 1
+      EventSourceArn: !GetAtt MyQueue1.Arn
+      FunctionName: !GetAtt LambdaFunctionToRecieveUniqueQuestion.Arn
+      Enabled: true
+
+  MyQueuePolicy1:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref MyQueue1
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowLambdaToSQS
+            Effect: Allow
+            Principal:
+              Service: "lambda.amazonaws.com"
+            Action:
+              - "sqs:SendMessage"
+              - "sqs:ReceiveMessage"
+              - "sqs:ListQueues"
+              - "sqs:GetQueueUrl"
+              - "sqs:GetQueueAttributes"
+              - "sqs:CreateQueue"
+              - "sqs:AddPermission"
+              - "sqs:GetQueueAttributes"
+            Resource: !GetAtt MyQueue1.Arn
+    DependsOn:
+      - MyQueue1
