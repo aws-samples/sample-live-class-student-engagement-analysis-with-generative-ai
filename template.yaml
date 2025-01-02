@@ -19,3 +19,19 @@ Resources:
               Action:
                 - bedrock:InvokeModel
               Resource: '*'
+  LambdaFunctionForQuesAndTranscript:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./functions/generate-quiz-and-transcript/
+      Handler: index.lambda_handler
+      Runtime: python3.12
+      Environment:
+        Variables:
+          DYNAMODB_NAME: "!Ref MyDynamoDBTable"
+          QUEUE_URL: "!GetAtt MyQueue1.QueueUrl "
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - bedrock:InvokeModel
+              Resource: '*'
