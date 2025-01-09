@@ -1,37 +1,339 @@
-AWSTemplateFormatVersion: 2010-09-09
+AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: CloudFormation template to configure S3 buckets, Lambda functions, and necessary permissions.
-
+Description: SAM template for configuring S3 buckets, Lambda functions, DynamoDB,
+  and SQS queues.
+Parameters:
+  IVSScreenshotBucket:
+    Description: The name of the S3 bucket
+    Type: String
+  DynamoDBForAllData:
+    Description: The name of the DynamoDB table
+    Type: String
+  ThumbnailProcessingQueue:
+    Type: String
+    Description: Name of the SQS queue to create
+  UniqueQuestionQueue:
+    Type: String
+    Description: Name of the SQS queue to create
 Resources:
-  EvaluateScreenshotFunction:
-    Type: AWS::Serverless::Function
+  MyQueue:
+    Type: AWS::SQS::Queue
     Properties:
-      CodeUri: ./functions/evaluate-screenshot-function/
-      Handler: index.lambda_handler
-      Runtime: python3.12
-      Environment:
-        Variables:
-          username: ""
-          password: ""
+      QueueName:
+        Ref: ThumbnailProcessingQueue
+      VisibilityTimeout: 900
+    Metadata:
+      SamResourceId: MyQueue
+  MyQueue1:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName:
+        Ref: UniqueQuestionQueue
+      VisibilityTimeout: 900
+    Metadata:
+      SamResourceId: MyQueue1
+  MyS3BucketSource:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: IVSScreenshotBucket
+    Metadata:
+      SamResourceId: MyS3BucketSource
+  S3LambdaPermissionsPolicyForEvent:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Action:
+          - s3:PutBucketNotification
+          - s3:GetBucketNotification
+          Resource:
+          - Fn::Sub: arn:aws:s3:::${MyS3BucketSource}
+          - Fn::Sub: arn:aws:s3:::${MyS3BucketSource}/*
+    Metadata:
+      SamResourceId: S3LambdaPermissionsPolicyForEvent
+  LambdaRoleForEvent:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - Ref: S3LambdaPermissionsPolicyForEvent
+    Metadata:
+      SamResourceId: LambdaRoleForEvent
+  MyDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName:
+        Ref: DynamoDBForAllData
+      AttributeDefinitions:
+      - AttributeName: Path
+        AttributeType: S
+      - AttributeName: Timestamp
+        AttributeType: S
+      KeySchema:
+      - AttributeName: Path
+        KeyType: HASH
+      - AttributeName: Timestamp
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+    Metadata:
+      SamResourceId: MyDynamoDBTable
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
       Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource: '*'
+      - PolicyName: LambdaBasicExecution
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Query
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - s3:GetObject
+            - s3:PutObject
+            - s3:DeleteObject
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - lambda:InvokeFunction
+            Resource: '*'
+          - Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            Resource:
+              Fn::GetAtt:
+              - MyQueue
+              - Arn
+          - Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            - sqs:SendMessage
+            Resource:
+              Fn::GetAtt:
+              - MyQueue1
+              - Arn
+          - Effect: Allow
+            Action:
+            - bedrock:InvokeModel
+            Resource: '*'
+    Metadata:
+      SamResourceId: LambdaExecutionRole
   LambdaFunctionForQuesAndTranscript:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./functions/generate-quiz-and-transcript/
       Handler: index.lambda_handler
       Runtime: python3.12
+      Timeout: 900
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-t0bukvagh1sw/pop-quiz/ef7ca3ff6311458bafa48ae735e3f606
       Environment:
         Variables:
-          DYNAMODB_NAME: "!Ref MyDynamoDBTable"
-          QUEUE_URL: "!GetAtt MyQueue1.QueueUrl "
+          DYNAMODB_NAME:
+            Ref: MyDynamoDBTable
+          QUEUE_URL:
+            Fn::GetAtt:
+            - MyQueue1
+            - QueueUrl
+      MemorySize: 256
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Enabled: true
+            Queue:
+              Fn::GetAtt:
+              - MyQueue
+              - Arn
+            BatchSize: 1
+    Metadata:
+      SamResourceId: LambdaFunctionForQuesAndTranscript
+  LambdaSQSPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: LambdaFunctionForQuesAndTranscript
+      Action: lambda:InvokeFunction
+      Principal: sqs.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - MyQueue
+        - Arn
+    Metadata:
+      SamResourceId: LambdaSQSPermission
+  LambdaFunctionToRecieveUniqueQuestion:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: index.lambda_handler
+      Runtime: python3.12
+      Timeout: 900
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole1
+        - Arn
+      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-t0bukvagh1sw/pop-quiz/9f3233778e4ac21d8058aec6183af68e
+      Events:
+        SQSEvent:
+          Type: SQS
+          Properties:
+            Enabled: true
+            Queue:
+              Fn::GetAtt:
+              - MyQueue1
+              - Arn
+            BatchSize: 1
+    Metadata:
+      SamResourceId: LambdaFunctionToRecieveUniqueQuestion
+  MyQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+      - Ref: MyQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowLambdaAndS3ToSQS
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+            - s3.amazonaws.com
+          Action:
+          - sqs:SendMessage
+          - sqs:ReceiveMessage
+          - s3:GetObject
+          Resource:
+            Fn::GetAtt:
+            - MyQueue
+            - Arn
+          Condition:
+            StringEquals:
+              aws:SourceArn:
+                Fn::GetAtt:
+                - MyS3BucketSource
+                - Arn
+    DependsOn:
+    - MyQueue
+    Metadata:
+      SamResourceId: MyQueuePolicy
+  LambdaExecutionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
       Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - bedrock:InvokeModel
-              Resource: '*'
+      - PolicyName: LambdaSQSPolicy1
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - sqs:ReceiveMessage
+            - sqs:DeleteMessage
+            - sqs:GetQueueAttributes
+            Resource:
+              Fn::GetAtt:
+              - MyQueue1
+              - Arn
+    Metadata:
+      SamResourceId: LambdaExecutionRole1
+  LambdaSQSPermission1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName:
+        Ref: LambdaFunctionToRecieveUniqueQuestion
+      Action: lambda:InvokeFunction
+      Principal: sqs.amazonaws.com
+      SourceArn:
+        Fn::GetAtt:
+        - MyQueue1
+        - Arn
+    Metadata:
+      SamResourceId: LambdaSQSPermission1
+  MyQueuePolicy1:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+      - Ref: MyQueue1
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AllowLambdaToSQS
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action:
+          - sqs:SendMessage
+          - sqs:ReceiveMessage
+          Resource:
+            Fn::GetAtt:
+            - MyQueue1
+            - Arn
+    DependsOn:
+    - MyQueue1
+    Metadata:
+      SamResourceId: MyQueuePolicy1
+Outputs:
+  MyS3BucketName:
+    Value:
+      Ref: MyS3BucketSource
+    Description: The name of the S3 bucket
+  MyDynamoDBTableName:
+    Value:
+      Ref: MyDynamoDBTable
+    Description: The name of the DynamoDB table
+  MyQueueURL:
+    Value:
+      Ref: MyQueue
+    Description: The URL of the Thumbnail Processing Queue
+  MyQueue1URL:
+    Value:
+      Ref: MyQueue1
+    Description: The URL of the Unique Question Queue
