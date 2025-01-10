@@ -9,22 +9,6 @@ Resources:
     Properties:
       QueueName: ScreenCaptureEventQueue
       VisibilityTimeout: 900
-    
-  QuizEventQueue:
-    Type: AWS::SQS::Queue
-    Properties:
-      QueueName: QuizEventQueue
-      VisibilityTimeout: 900
-    
-  ScreenCaptureS3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      
-      NotificationConfiguration:
-          QueueConfigurations:
-            - Event: s3:ObjectCreated:Put
-              Queue: !GetAtt ScreenCaptureEventQueue.Arn
-    DependsOn : ScreenCaptureQueuePolicy
 
   ScreenCaptureQueuePolicy:
     Type: AWS::SQS::QueuePolicy
@@ -43,8 +27,38 @@ Resources:
         - Ref: ScreenCaptureEventQueue
     DependsOn : ScreenCaptureEventQueue  
 
-      
+  QuizEventQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: QuizEventQueue
+      VisibilityTimeout: 900
     
+  ScreenCaptureS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      NotificationConfiguration:
+          QueueConfigurations:
+            - Event: s3:ObjectCreated:Put
+              Queue: !GetAtt ScreenCaptureEventQueue.Arn
+    DependsOn : ScreenCaptureQueuePolicy
+
+  ScreenCaptureRecordingConfiguration:
+    Type: AWS::IVS::RecordingConfiguration
+    Properties:
+      DestinationConfiguration: 
+        S3:
+          BucketName: !Ref ScreenCaptureS3Bucket
+      Name: QuizThumbnailRecordingConfiguration
+      RecordingReconnectWindowSeconds: 30
+      RenditionConfiguration:
+        RenditionSelection: NONE 
+      ThumbnailConfiguration: 
+        RecordingMode: INTERVAL
+        Resolution: HD
+        Storage: 
+          - SEQUENTIAL
+        TargetIntervalSeconds: 30
+
   S3LambdaPermissionsPolicyForEvent:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -294,13 +308,9 @@ Resources:
         Ref: LambdaFunctionToRecieveUniqueQuestion
       Action: lambda:InvokeFunction
       Principal: sqs.amazonaws.com
-      SourceArn:
-        Fn::GetAtt:
-        - QuizEventQueue
-        - Arn
-    Metadata:
-      SamResourceId: LambdaSQSPermission1
-  ScreenCaptureEventQueuePolicy1:
+      SourceArn: !GetAtt QuizEventQueue.Arn
+      
+  QuizEventQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
@@ -315,14 +325,10 @@ Resources:
           Action:
           - sqs:SendMessage
           - sqs:ReceiveMessage
-          Resource:
-            Fn::GetAtt:
-            - QuizEventQueue
-            - Arn
+          Resource: !GetAtt QuizEventQueue.Arn
     DependsOn:
     - QuizEventQueue
-    Metadata:
-      SamResourceId: ScreenCaptureEventQueuePolicy1
+
 Outputs:
   ScreenCaptureS3Bucket:
     Value:
@@ -340,3 +346,6 @@ Outputs:
     Value:
       Ref: QuizEventQueue
     Description: The URL of the Unique Question Queue
+  ScreenCaptureRecordingConfiguration:
+    Value: !Ref ScreenCaptureRecordingConfiguration
+    Description: The ARN of IVS Recording Configuration
