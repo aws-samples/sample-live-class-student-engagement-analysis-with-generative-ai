@@ -6,7 +6,7 @@ Maintaining student engagement during live online classes is challenging, as act
  
 In this section, we will walk you through the architecture of this prototype, designed to analyze student engagement and attentiveness in live classrooms using Generative AI. This architecture ensures that teachers can get real-time insights into how well students are engaging with the lesson content, and it is built to scale seamlessly with minimal overhead. We have created 1-click deployment option of this prototype solution in form of AWS CloudFormation template allowing you to deploy easily in your AWS account. Follow “How to deploy” section below for more details.
 
-  ![Fig 1](/live-class-student-attentiveness-and-engagement-analysis/asset/architecture.png)
+  ![Fig 1](./asset/architecture.png)
 
 ### Step 1: Capturing Screenshots from the Live Classroom
 

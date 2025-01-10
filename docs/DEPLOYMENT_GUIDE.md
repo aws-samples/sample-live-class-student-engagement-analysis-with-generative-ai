@@ -10,23 +10,23 @@ Step 3. Enable Amazon Bedrock Model access.
 
  b. Click on **Get Started** and then click on **Request access model** from the bottom of left pannel.
 
-  ![Fig 1.1](/student-activity-monitor/live-class-student-engagement-analysis-with-generative-ai/asset/bedrock/image1.png)
+  ![Fig 1.1](/student-activity-monitor../asset/bedrock/image1.png)
 
-  ![Fig 1.2](/live-class-student-engagement-analysis-with-generative-ai/asset/bedrock/image2.png)
+  ![Fig 1.2](../asset/bedrock/image2.png)
 
  c. Enable Claude 3 sonet Model and click on **Next**.
 
-  ![Fig 1.3](/live-class-student-engagement-analysis-with-generative-ai/asset/bedrock/image3.png)
+  ![Fig 1.3](../asset/bedrock/image3.png)
 
  d. Click on **Submit** button to save the changes.
 
-  ![Fig 1.4](/live-class-student-engagement-analysis-with-generative-ai/asset/bedrock/image4.png)
+  ![Fig 1.4](../asset/bedrock/image4.png)
 
 ## Now Deploy the CloudFormation template to launch all the resources
 
 Step 1. To obtain all the necessary files locally, run the following command:
 
-`git clone git@ssh.gitlab.aws.dev:nehanejh/live-class-student-engagement-analysis-with-generative-ai.git`
+`git clone git@ssh.gitlab.aws.dev:nehanejh...git`
 
 Alternatively, you can download the provided files directly.
 
@@ -87,37 +87,37 @@ From here delete all the Lambda Trigger.
 
 Step-1. Go to the CloudFormation console and locate the stack named **UGC dev**.
 
-![Fig 8.1](/live-class-student-engagement-analysis-with-generative-ai/asset/demo/image1.png)
+![Fig 8.1](../asset/demo/image1.png)
 
 Step-2. Click on the Outputs tab, scroll down, and find the frontendAppBaseUrl. Use this URL to open the login page.
 
-![Fig 8.2](/live-class-student-engagement-analysis-with-generative-ai/asset/demo/image2.png)
+![Fig 8.2](../asset/demo/image2.png)
 
 Step-3. Create a user account and login to access the home screen.
 
-![Fig 8.3](/live-class-student-engagement-analysis-with-generative-ai/asset/demo/image3.png)
+![Fig 8.3](../asset/demo/image3.png)
 
-![Fig 8.4](/live-class-student-engagement-analysis-with-generative-ai/asset/demo/image4.png)
+![Fig 8.4](../asset/demo/image4.png)
 
-![Fig 8.5](/live-class-student-engagement-analysis-with-generative-ai/asset/demo/image5.png)
+![Fig 8.5](../asset/demo/image5.png)
 
 Step-4. Now navigate to the **IVS Console**, you will find the channel you created. Next, we need to add the recording configuration to automatically capture screenshots from the live session and send them to the S3 bucket deployed from the first CloudFormation template.x
 
-![Fig 8.6](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image1.png)
+![Fig 8.6](../asset/recording-config/image1.png)
 
 Step-5. Access **Recording Configuration** From the left panel, select **Recording configuration** then **create recording configuration**.
 
-![Fig 8.7](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image2.png)
+![Fig 8.7](../asset/recording-config/image2.png)
 
 step-6. Provide a name for your recording configuration.
 
 Step-7. Choose **Custom Configuration** and set the **Target thumbnail** interval to 30 seconds.
 
-![Fig 8.8](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image3.png)
+![Fig 8.8](../asset/recording-config/image3.png)
 
 Step-8. Select Storage Option: Under Storage, choose Select an **existing Amazon S3 bucket**.
 
-![Fig 8.9](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image4.png)
+![Fig 8.9](../asset/recording-config/image4.png)
 
 Step-8. Locate Your S3 Bucket: Use the S3 bucket name that you copied when providing the resource name for deploying the CloudFormation template, or you can find the name of your S3 bucket from the first stack you deployed.
 
@@ -125,8 +125,8 @@ Step-9. Finalize Configuration: Under Amazon S3 bucket, select the appropriate b
 
 Step-10. Go to the channel, attach the recording configuration, click on **Edit** from the top menu.
 
-![Fig 8.11](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image7.png)
+![Fig 8.11](../asset/recording-config/image7.png)
 
 Step-11. **Enable automatic recording**, select the created recording configuration, and click **Save Changes.**
 
-![Fig 8.12](/live-class-student-engagement-analysis-with-generative-ai/asset/recording-config/image8.png)
+![Fig 8.12](../asset/recording-config/image8.png)
