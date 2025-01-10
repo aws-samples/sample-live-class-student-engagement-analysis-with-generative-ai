@@ -1,10 +1,10 @@
 version = 0.1
 [default.deploy.parameters]
-stack_name = "live-class-student-analysis"
+stack_name = "pop-quiz"
 resolve_s3 = true
-s3_prefix = "live-class-student-analysis"
-region = "ap-south-1"
+s3_prefix = "pop-quiz"
+region = "us-west-2"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-disable_rollback = true
+parameter_overrides = "IVSScreenshotBucket=\"ivs-screenshot-bucket-sam-test\" DynamoDBForAllData=\"my-dynamodb-table\" ThumbnailProcessingQueue=\"ThumbnailProcessingQueue\" UniqueQuestionQueue=\"UniqueQuestionQueue\""
 image_repositories = []

@@ -2,43 +2,49 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: SAM template for configuring S3 buckets, Lambda functions, DynamoDB,
   and SQS queues.
-Parameters:
-  IVSScreenshotBucket:
-    Description: The name of the S3 bucket
-    Type: String
-  DynamoDBForAllData:
-    Description: The name of the DynamoDB table
-    Type: String
-  ThumbnailProcessingQueue:
-    Type: String
-    Description: Name of the SQS queue to create
-  UniqueQuestionQueue:
-    Type: String
-    Description: Name of the SQS queue to create
+
 Resources:
-  MyQueue:
+  ScreenCaptureEventQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName:
-        Ref: ThumbnailProcessingQueue
+      QueueName: ScreenCaptureEventQueue
       VisibilityTimeout: 900
-    Metadata:
-      SamResourceId: MyQueue
-  MyQueue1:
+    
+  QuizEventQueue:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName:
-        Ref: UniqueQuestionQueue
+      QueueName: QuizEventQueue
       VisibilityTimeout: 900
-    Metadata:
-      SamResourceId: MyQueue1
-  MyS3BucketSource:
+    
+  ScreenCaptureS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName:
-        Ref: IVSScreenshotBucket
-    Metadata:
-      SamResourceId: MyS3BucketSource
+      
+      NotificationConfiguration:
+          QueueConfigurations:
+            - Event: s3:ObjectCreated:Put
+              Queue: !GetAtt ScreenCaptureEventQueue.Arn
+    DependsOn : ScreenCaptureQueuePolicy
+
+  ScreenCaptureQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - 
+            Action: 
+              - "SQS:SendMessage" 
+              - "SQS:ReceiveMessage"
+            Effect: "Allow"
+            Resource: "*"
+            Principal:  
+              AWS: "*"     
+      Queues: 
+        - Ref: ScreenCaptureEventQueue
+    DependsOn : ScreenCaptureEventQueue  
+
+      
+    
   S3LambdaPermissionsPolicyForEvent:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -50,8 +56,8 @@ Resources:
           - s3:PutBucketNotification
           - s3:GetBucketNotification
           Resource:
-          - Fn::Sub: arn:aws:s3:::${MyS3BucketSource}
-          - Fn::Sub: arn:aws:s3:::${MyS3BucketSource}/*
+          - Fn::Sub: arn:aws:s3:::${ScreenCaptureS3Bucket}
+          - Fn::Sub: arn:aws:s3:::${ScreenCaptureS3Bucket}/*
     Metadata:
       SamResourceId: S3LambdaPermissionsPolicyForEvent
   LambdaRoleForEvent:
@@ -68,11 +74,10 @@ Resources:
       - Ref: S3LambdaPermissionsPolicyForEvent
     Metadata:
       SamResourceId: LambdaRoleForEvent
-  MyDynamoDBTable:
+  QuizEventDDB:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName:
-        Ref: DynamoDBForAllData
+      TableName: QuizEventDDB
       AttributeDefinitions:
       - AttributeName: Path
         AttributeType: S
@@ -83,11 +88,9 @@ Resources:
         KeyType: HASH
       - AttributeName: Timestamp
         KeyType: RANGE
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
-    Metadata:
-      SamResourceId: MyDynamoDBTable
+      BillingMode: PAY_PER_REQUEST  
+      
+    
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -134,7 +137,7 @@ Resources:
             - sqs:GetQueueAttributes
             Resource:
               Fn::GetAtt:
-              - MyQueue
+              - ScreenCaptureEventQueue
               - Arn
           - Effect: Allow
             Action:
@@ -144,7 +147,7 @@ Resources:
             - sqs:SendMessage
             Resource:
               Fn::GetAtt:
-              - MyQueue1
+              - QuizEventQueue
               - Arn
           - Effect: Allow
             Action:
@@ -162,14 +165,14 @@ Resources:
         Fn::GetAtt:
         - LambdaExecutionRole
         - Arn
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-t0bukvagh1sw/pop-quiz/ef7ca3ff6311458bafa48ae735e3f606
+      CodeUri: ./functions/generate-quiz-and-transcript
       Environment:
         Variables:
           DYNAMODB_NAME:
-            Ref: MyDynamoDBTable
+            Ref: QuizEventDDB
           QUEUE_URL:
             Fn::GetAtt:
-            - MyQueue1
+            - QuizEventQueue
             - QueueUrl
       MemorySize: 256
       Events:
@@ -179,7 +182,7 @@ Resources:
             Enabled: true
             Queue:
               Fn::GetAtt:
-              - MyQueue
+              - ScreenCaptureEventQueue
               - Arn
             BatchSize: 1
     Metadata:
@@ -193,7 +196,7 @@ Resources:
       Principal: sqs.amazonaws.com
       SourceArn:
         Fn::GetAtt:
-        - MyQueue
+        - ScreenCaptureEventQueue
         - Arn
     Metadata:
       SamResourceId: LambdaSQSPermission
@@ -207,7 +210,7 @@ Resources:
         Fn::GetAtt:
         - LambdaExecutionRole1
         - Arn
-      CodeUri: s3://aws-sam-cli-managed-default-samclisourcebucket-t0bukvagh1sw/pop-quiz/9f3233778e4ac21d8058aec6183af68e
+      CodeUri: ./functions/evaluate-screenshot-function
       Events:
         SQSEvent:
           Type: SQS
@@ -215,16 +218,16 @@ Resources:
             Enabled: true
             Queue:
               Fn::GetAtt:
-              - MyQueue1
+              - QuizEventQueue
               - Arn
             BatchSize: 1
     Metadata:
       SamResourceId: LambdaFunctionToRecieveUniqueQuestion
-  MyQueuePolicy:
+  ScreenCaptureEventQueuePolicy:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-      - Ref: MyQueue
+      - Ref: ScreenCaptureEventQueue
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -240,18 +243,18 @@ Resources:
           - s3:GetObject
           Resource:
             Fn::GetAtt:
-            - MyQueue
+            - ScreenCaptureEventQueue
             - Arn
           Condition:
             StringEquals:
               aws:SourceArn:
                 Fn::GetAtt:
-                - MyS3BucketSource
+                - ScreenCaptureS3Bucket
                 - Arn
     DependsOn:
-    - MyQueue
+    - ScreenCaptureEventQueue
     Metadata:
-      SamResourceId: MyQueuePolicy
+      SamResourceId: ScreenCaptureEventQueuePolicy
   LambdaExecutionRole1:
     Type: AWS::IAM::Role
     Properties:
@@ -280,7 +283,7 @@ Resources:
             - sqs:GetQueueAttributes
             Resource:
               Fn::GetAtt:
-              - MyQueue1
+              - QuizEventQueue
               - Arn
     Metadata:
       SamResourceId: LambdaExecutionRole1
@@ -293,15 +296,15 @@ Resources:
       Principal: sqs.amazonaws.com
       SourceArn:
         Fn::GetAtt:
-        - MyQueue1
+        - QuizEventQueue
         - Arn
     Metadata:
       SamResourceId: LambdaSQSPermission1
-  MyQueuePolicy1:
+  ScreenCaptureEventQueuePolicy1:
     Type: AWS::SQS::QueuePolicy
     Properties:
       Queues:
-      - Ref: MyQueue1
+      - Ref: QuizEventQueue
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -314,26 +317,26 @@ Resources:
           - sqs:ReceiveMessage
           Resource:
             Fn::GetAtt:
-            - MyQueue1
+            - QuizEventQueue
             - Arn
     DependsOn:
-    - MyQueue1
+    - QuizEventQueue
     Metadata:
-      SamResourceId: MyQueuePolicy1
+      SamResourceId: ScreenCaptureEventQueuePolicy1
 Outputs:
-  MyS3BucketName:
+  ScreenCaptureS3Bucket:
     Value:
-      Ref: MyS3BucketSource
+      Ref: ScreenCaptureS3Bucket
     Description: The name of the S3 bucket
-  MyDynamoDBTableName:
+  QuizEventDDBName:
     Value:
-      Ref: MyDynamoDBTable
+      Ref: QuizEventDDB
     Description: The name of the DynamoDB table
-  MyQueueURL:
+  ScreenCaptureEventQueueURL:
     Value:
-      Ref: MyQueue
+      Ref: ScreenCaptureEventQueue
     Description: The URL of the Thumbnail Processing Queue
-  MyQueue1URL:
+  QuizEventQueueURL:
     Value:
-      Ref: MyQueue1
+      Ref: QuizEventQueue
     Description: The URL of the Unique Question Queue
