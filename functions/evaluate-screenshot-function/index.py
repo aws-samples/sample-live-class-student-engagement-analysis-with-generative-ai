@@ -6,7 +6,7 @@ from lzstring import LZString
 
 lz = LZString()
 
-url_link = "https://DUMMY.cloudfront.net/channel/actions/send"
+url_link = "DUMMY.cloudfront.net/channel/actions/send"
 client_id = "YOUR_CLIENTID"
 
 def pack(metadata_obj):

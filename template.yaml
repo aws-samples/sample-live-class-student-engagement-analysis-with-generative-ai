@@ -199,8 +199,6 @@ Resources:
               - ScreenCaptureEventQueue
               - Arn
             BatchSize: 1
-    Metadata:
-      SamResourceId: LambdaFunctionForQuesAndTranscript
   LambdaSQSPermission:
     Type: AWS::Lambda::Permission
     Properties:

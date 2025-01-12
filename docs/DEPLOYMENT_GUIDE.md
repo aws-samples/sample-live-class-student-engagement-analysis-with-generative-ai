@@ -49,27 +49,37 @@ Afterwards, go to CloudFormation. Within 1-2 minutes, you’ll see the stack cre
 
 # Update the index.py File
 
-Open the index.py file, replace the placeholder for client_id with your Cognito client ID:
+Step-1: Open the index.py file in Lambda function with name "LambdaFunctionToRecieveUniqueQuestion", replace the placeholder for client_id with your Cognito client ID:
 
-Go to the Cognito console, open the user pool associated with your application.
+Step-2: Go to the Cognito console, open the user pool associated with your application and click on the your channel under **User Pool Name**.
 
-Click on the **App Integration** tab and copy the **client ID** from the bottom of the page.
+![Fig 7.2](../asset/cognito/image1.png)
 
-Paste the copied client ID into your index.py file.
+ Step-3: Now from the left pannel, go to **App Client** under "Applications", Click on channel under "App Client Name" and copy Client Id.
 
-Update the API URL
+![Fig 7.2](../asset/cognito/image2.png)
 
-Replace the **url_link** variable in your index.py file with the following value:
+![Fig 7.2](../asset/cognito/image3.png)
 
-apiBaseUrl/channel/actions/send
+Step-4: Paste the copied client ID into your index.py file.
+
+Step-5: Now Update the API URL
+
+Replace the **url_link** dummy value with "appBaseUrl" in the same file.
 
 -> You can obtain this URL after deploying the IVS UGC demo from the CloudFormation stack named UGC dev, found in the output section and append /channel/actions/send at the end.
 
-Update the Environment Variables
+![Fig 7.2](../asset/cognito/image3.png)
 
-Open the .env file and replace the username and password fields with your UGC Demo login ID and password.
+Step-6: Update the Environment Variables
 
+Step-7: Open the .env file and replace the username and password fields with your UGC Demo login ID and password.
 
+![Fig 7.2](../asset/cognito/image5.png)
+
+Step-8: To get UGC Demo login ID and password, you need to open "frontendAppBaseUrl" from the CloudFormation stack named UGC dev, found in the output section. Then you have to create user and you can use that username and password for your environment variabl.
+
+![Fig 7.2](../asset/cognito/image4.png)
 
 # Follow these steps to set up the IVS UGC demo(for dev environment).
 
