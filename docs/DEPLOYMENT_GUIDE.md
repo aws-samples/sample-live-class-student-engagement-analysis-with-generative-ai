@@ -69,17 +69,22 @@ Replace the **url_link** dummy value with "appBaseUrl" in the same file.
 
 -> You can obtain this URL after deploying the IVS UGC demo from the CloudFormation stack named UGC dev, found in the output section and append /channel/actions/send at the end.
 
-![Fig 7.2](../asset/cognito/image3.png)
+![Fig 7.2](../asset/cognito/image4.png)
 
-Step-6: Update the Environment Variables
+Step-6: Update the Environment Variables, navigate to AWS Lambda Function with name "LambdaFunctionToRecieveUniqueQuestion". Click on first "+" icon from the left panel to create env file. Create file with name "env" and then add your username and password.
+
+![Fig 7.2](../asset/cognito/image6.png)
 
 Step-7: Open the .env file and replace the username and password fields with your UGC Demo login ID and password.
 
 ![Fig 7.2](../asset/cognito/image5.png)
 
-Step-8: To get UGC Demo login ID and password, you need to open "frontendAppBaseUrl" from the CloudFormation stack named UGC dev, found in the output section. Then you have to create user and you can use that username and password for your environment variabl.
+NOTE: To get UGC Demo login ID and password, you need to open "frontendAppBaseUrl" from the CloudFormation stack named UGC dev, found in the output section. Then you have to create user and you can use that username and password for your environment variabl.
 
-![Fig 7.2](../asset/cognito/image4.png)
+![Fig 7.2](../asset/cognito/image7.png)
+
+![Fig 7.2](../asset/cognito/image8.png)
+
 
 # Follow these steps to set up the IVS UGC demo(for dev environment).
 
@@ -111,27 +116,13 @@ Step-3. Create a user account and login to access the home screen.
 
 ![Fig 8.5](../asset/demo/image5.png)
 
-Step-4. Now navigate to the **IVS Console**, you will find the channel you created. Next, we need to add the recording configuration to automatically capture screenshots from the live session and send them to the S3 bucket deployed from the first CloudFormation template.x
+Step-4. Now navigate to the **IVS Console**, you will find the channel you created. Next, we need to attach the recording configuration which already get created as part of SAM Templaate resource, to automatically capture screenshots from the live session and send them to the S3 bucket, which is also get deployed as a part of SAM Template resource.
 
 ![Fig 8.6](../asset/recording-config/image1.png)
 
 Step-5. Access **Recording Configuration** From the left panel, select **Recording configuration** then **create recording configuration**.
 
 ![Fig 8.7](../asset/recording-config/image2.png)
-
-step-6. Provide a name for your recording configuration.
-
-Step-7. Choose **Custom Configuration** and set the **Target thumbnail** interval to 30 seconds.
-
-![Fig 8.8](../asset/recording-config/image3.png)
-
-Step-8. Select Storage Option: Under Storage, choose Select an **existing Amazon S3 bucket**.
-
-![Fig 8.9](../asset/recording-config/image4.png)
-
-Step-8. Locate Your S3 Bucket: Use the S3 bucket name that you copied when providing the resource name for deploying the CloudFormation template, or you can find the name of your S3 bucket from the first stack you deployed.
-
-Step-9. Finalize Configuration: Under Amazon S3 bucket, select the appropriate bucket, then click on **Create recording configuration**.
 
 Step-10. Go to the channel, attach the recording configuration, click on **Edit** from the top menu.
 
