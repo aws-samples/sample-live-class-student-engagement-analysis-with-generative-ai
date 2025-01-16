@@ -1,5 +1,8 @@
 # Live class student attentiveness and engagement analysis with GenAI
 
+### Version 1.0.0
+## Overview
+
 Maintaining student engagement during live online classes is challenging, as active participation and real-time interaction are crucial for effective learning. Instructors often struggle to measure student engagement, impacting the learning process and overall experience. To address this, our solution enhances online learning by monitoring and improving student attentiveness in real-time. Using Amazon Interactive Video Service (IVS), the system captures screenshots of live sessions and generates interactive, content-driven questions. This technology, ideal for educational institutions and e-learning platforms, ensures continuous engagement and adapts to dynamic educational content, optimizing virtual classroom experiences.
 
 # Architecture Diagram
@@ -79,8 +82,25 @@ Real-time Analytics: Teachers can be provided with a live dashboard that visuali
 
 This functionality allows for personalized feedback and the ability to adapt teaching strategies in real-time, enhancing overall engagement and learning outcomes.
 
+## Deployment guide
 
-  [Click this link for step by step guide](docs/DEPLOYMENT_GUIDE.md)
+### Pre-requisite
 
-  [Click this link to learn how to run the demo](docs/DEMO_GUIDE.md)
+### How to install
+[Click this link for step by step guide](docs/DEPLOYMENT_GUIDE.md)
+
+### How to test
+[Click this link to learn how to run the demo](docs/DEMO_GUIDE.md)
+
+### How to clean-up
+
+### How to test with UGC demo (optional)
+
+  
+## License
+
+This library is licensed under the MIT-0 License.
+
+Please see LICENSE for applicable license terms and NOTICE for applicable notices.
+  
 

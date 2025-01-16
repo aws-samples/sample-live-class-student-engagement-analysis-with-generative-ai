@@ -46,6 +46,30 @@ These commands will launch all the required resources.
 
 Afterwards, go to CloudFormation. Within 1-2 minutes, you’ll see the stack created. From there, you can access any resources by clicking on the physical ID.
 
+# How to test
+??
+
+# How to test with UGC Demo
+
+## Installing UGC demo 
+??
+
+One screenshot of running UGC demo 
+
+
+## How to integrate our demo with UGC (Optional)
+
+### 1. Get UGC Amazon Cognitio client_id and credentials
+
+### 2. Update <> AWS Lambda function
+-- Updated this environment variable
+UGC_DEMO_API_URL
+UGC_COGNITO_CLIENT_ID
+UGC_COGNITO_USERNAME
+UGC_COGNITO_PASSWORD
+
+
+
 
 # Update the index.py File
 
