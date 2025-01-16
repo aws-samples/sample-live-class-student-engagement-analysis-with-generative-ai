@@ -10,7 +10,7 @@ Step 3. Enable Amazon Bedrock Model access.
 
  b. Click on **Get Started** and then click on **Request access model** from the bottom of left pannel.
 
-  ![Fig 1.1](/student-activity-monitor../asset/bedrock/image1.png)
+  ![Fig 1.1](../asset/bedrock/image1.png)
 
   ![Fig 1.2](../asset/bedrock/image2.png)
 
@@ -22,7 +22,7 @@ Step 3. Enable Amazon Bedrock Model access.
 
   ![Fig 1.4](../asset/bedrock/image4.png)
 
-## Now Deploy the CloudFormation template to launch all the resources
+## Now Deploy the SAM template to launch all the resources
 
 Step 1. To obtain all the necessary files locally, run the following command:
 
