@@ -1,11 +1,11 @@
 
-1. Run command  
+ Run command  
 
-    1. git clone https://gitlab.aws.dev/wwps-india/ps-prototyping-team/live-class-student-engagement-analysis-with-generative-ai
+1. git clone https://gitlab.aws.dev/wwps-india/ps-prototyping-team/live-class-student-engagement-analysis-with-generative-ai
 
-     cd live-class-student-engagement-analysis-with-generative-ai
+2. cd live-class-student-engagement-analysis-with-generative-ai
 
-    2. sam build
+3. sam build
 
-    3. sam deploy —guided (with default options)
+4. sam deploy —guided (with default options)
 
