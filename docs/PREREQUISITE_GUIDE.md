@@ -2,9 +2,11 @@
 
 Step 1. An active AWS account.
 
-Step 2. AWS CLI installed and configured
+Step 2. AWS CLI installed and configured : https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-Step 3. Enable Amazon Bedrock Model access.
+Step 3. Enable Amazon Bedrock Model access: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
+
+Optionally, you can follow the steps below to enable Amazon Bedrock model access:
 
 a. Navigate to AWS console, search for **Amazon Bedrock**. 
 
