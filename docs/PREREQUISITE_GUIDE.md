@@ -4,7 +4,11 @@ Step 1. An active AWS account.
 
 Step 2. AWS CLI installed and configured : https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
 
-Step 3. Enable Amazon Bedrock Model access: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
+Step 3. Install sam cli: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/install-sam-cli.html
+
+Step 4. Having AWS profile with AWS account administrative access.
+
+Step 5. Enable Amazon Bedrock Model access: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
 
 Optionally, you can follow the steps below to enable Amazon Bedrock model access:
 
