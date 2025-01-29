@@ -66,10 +66,3 @@ Student Interaction Monitoring: As part of Amazon IVS UGC platform demo, when st
 Real-time Analytics: Teachers can be provided with a live dashboard that visualizes key engagement metrics, such as the number of questions answered, average scores, and trends in student participation. With these data, teacher can adjust their teaching strategies, revisit challenging concepts, and identify disengaged students who may need additional support.
 
 This functionality allows for personalized feedback and the ability to adapt teaching strategies in real-time, enhancing overall engagement and learning outcomes.
-
-   
-  [Follow this guide for detailed prerequisite](docs/PREREQUISITE_GUIDE.md)
-
-  [Follow this guide to deploy the demo](docs/DEPLOYMENT_GUIDE.md)
-
-  [Follow this guiide to run the demo](docs/DEMO_GUIDE.md)

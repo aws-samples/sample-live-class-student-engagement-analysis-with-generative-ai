@@ -6,7 +6,7 @@ Step 1. To obtain all the necessary files locally, run the following command:
 
 Alternatively, you can download the provided files directly.
 
-Go to the folder "live-class-student-engagement-analysis-with-generative-ai"
+Step-2: Go to the folder "live-class-student-engagement-analysis-with-generative-ai"
 
    cd live-class-student-engagement-analysis-with-generative-ai
 
