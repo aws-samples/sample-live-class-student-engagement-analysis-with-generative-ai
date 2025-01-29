@@ -1,6 +1,6 @@
 ## You can manually test by uploading a jepg sample screenshot inside S3 bucket.
 
-Step 1. Navigate to your S3 console, locate the S3 bucket created with the SAM template. Go to the bucket, create a folder inside it, click on the 'Upload' button, then click 'Add files' and upload an image from the 'classes' folder in GitLab.
+Step 1. Navigate to your S3 console, locate the S3 bucket created with the SAM template. Go to the bucket, create a folder inside it, click on the 'Upload' button, then click 'Add files' and upload an image from the 'classes' folder in GitHub.
 
 ![Fig 7.2](../asset/testing-demo/image1.png)
 

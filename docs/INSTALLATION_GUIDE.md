@@ -1,4 +1,3 @@
-
  Run command  
 
 1. git clone https://gitlab.aws.dev/wwps-india/ps-prototyping-team/live-class-student-engagement-analysis-with-generative-ai
