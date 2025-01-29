@@ -34,8 +34,9 @@ NOTE: To get UGC Demo login ID and password, you need to open "frontendAppBaseUr
 
 ![Fig 7.2](../asset/cognito/image7.png)
 
-![Fig 7.2](../asset/cognito/image8.png)
+![Fig 8.4](../asset/demo/image4.png)
 
+![Fig 8.5](../asset/demo/image5.png)
 
 # Follow these steps to set up the IVS UGC demo(for dev environment).
 
@@ -61,17 +62,13 @@ Step-2. Click on the Outputs tab, scroll down, and find the frontendAppBaseUrl. 
 
 Step-3. Create a user account and login to access the home screen.
 
-![Fig 8.3](../asset/demo/image3.png)
-
 ![Fig 8.4](../asset/demo/image4.png)
 
 ![Fig 8.5](../asset/demo/image5.png)
 
-Step-4. Now navigate to the **IVS Console**, you will find the channel you created. Next, we need to attach the recording configuration which already get created as part of SAM Templaate resource, to automatically capture screenshots from the live session and send them to the S3 bucket, which is also get deployed as a part of SAM Template resource.
+Step-4. Now navigate to the **IVS Console**, you will find the channel you created. Next, we need to attach the recording configuration which already get created as part of SAM Templaate resource, to automatically capture screenshots from the live session and send them to the S3 bucket, which is also get deployed as a part of SAM Template resource. 
 
-![Fig 8.6](../asset/recording-config/image1.png)
-
-Step-5. Access **Recording Configuration** From the left panel, select **Recording configuration** then **create recording configuration**.
+Step-5. Navigate to IVS console, You will find **Recording Configuration** From the left panel, click on **Recording configuration** and note the name of created Recording Configuration.
 
 ![Fig 8.7](../asset/recording-config/image2.png)
 
@@ -79,6 +76,6 @@ Step-10. Go to the channel, attach the recording configuration, click on **Edit*
 
 ![Fig 8.11](../asset/recording-config/image7.png)
 
-Step-11. **Enable automatic recording**, select the created recording configuration, and click **Save Changes.**
+Step-11. **Enable automatic recording** under "Record and store streams" , select the created recording configuration, and click  on **Save Changes**.
 
 ![Fig 8.12](../asset/recording-config/image8.png)
