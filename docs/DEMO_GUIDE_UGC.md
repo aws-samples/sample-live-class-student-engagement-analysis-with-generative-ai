@@ -35,7 +35,11 @@ Step 5. Click on **Go Live**. This will take you to the main page where you can 
 
 Step 7. Click the top icon **View Your Channel**. This will display the student screen, allowing you to see your slides along with questions generated from screenshots captured every few seconds.
 
+Teacher View:
+
 ![Fig 16](../asset/demo/image10.png)
+
+Student View:
 
 ![Fig 17](../asset/demo/image11.png)
 
