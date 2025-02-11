@@ -67,3 +67,8 @@ Sample solution can be further extended to build UI dashboards showcasing engage
 **Real-time Analytics**: Teachers can be provided with a **live dashboard** that visualizes key engagement metrics, such as the number of questions answered, average scores, and trends in student participation. With these data, teacher can adjust their teaching strategies, revisit challenging concepts, and identify disengaged students who may need additional support.
 
 This functionality allows for personalized feedback and the ability to adapt teaching strategies in real-time, enhancing overall engagement and learning outcomes.
+
+
+# License Summary
+
+This sample code is made available under the MIT-0 license. See the LICENSE file.

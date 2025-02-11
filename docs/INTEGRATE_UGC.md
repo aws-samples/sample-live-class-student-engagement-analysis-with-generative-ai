@@ -1,8 +1,17 @@
-# Update the index.py File
+# Update the environment variable of Lambda Function.
 
-Step-1: Open the index.py file in Lambda function with name "LambdaFunctionToRecieveUniqueQuestion", replace the placeholder for client_id with your Cognito client ID:
+Step 1: Navigate to the Configuration tab of the Lambda function named "LambdaFunctionToReceiveUniqueQuestion".
 
-Step-2: Go to the Cognito console, open the user pool associated with your application and click on the your channel under **User Pool Name**.
+Add the following four environment variables and their respective values:
+
+1. client_id: Set the value to the Cognito client.
+2. url_link: Set the value to the appBaseUrl.
+3. user_name: Set the value to your UGC demo username.
+4. password: Set the value to your UGC demo password.
+
+![Fig 7.2](../asset/cognito/image12.png)
+
+Step-2: To obtain client_id go to the Cognito console, open the user pool associated with your application and click on the your channel under **User Pool Name**.
 
 ![Fig 7.2](../asset/cognito/image1.png)
 
@@ -12,21 +21,19 @@ Step-2: Go to the Cognito console, open the user pool associated with your appli
 
 ![Fig 7.2](../asset/cognito/image3.png)
 
-Step-4: Paste the copied client ID into your index.py file.
+Step-4: Paste the copied client ID and add it as environment variable.
+
+![Fig 7.2](../asset/cognito/image12.png)
 
 Step-5: Now Update the API URL
 
-Replace the **url_link** dummy value with "appBaseUrl" in the same file.
+Replace the **url_link** value with "appBaseUrl" in the same file.
 
--> You can obtain this URL after deploying the IVS UGC demo from the CloudFormation stack named UGC dev, found in the output section and append /channel/actions/send at the end.
+-> You can obtain this URL from the CloudFormation stack named UGC dev, found in the output section and append /channel/actions/send at the end.
 
 ![Fig 7.2](../asset/cognito/image4.png)
 
-Step-6: Update the Environment Variables, navigate to AWS Lambda Function with name "LambdaFunctionToRecieveUniqueQuestion". Click on first "+" icon from the left panel to create env file. Create file with name "env" and then add your username and password.
-
-![Fig 7.2](../asset/cognito/image6.png)
-
-Step-7: Open the .env file and replace the username and password fields with your UGC Demo login ID and password.
+Step-7: Open the configuration file and place the value for username and password fields with your UGC Demo login ID and password.
 
 ![Fig 7.2](../asset/cognito/image5.png)
 
@@ -38,9 +45,6 @@ NOTE: To get UGC Demo login ID and password, you need to open "frontendAppBaseUr
 
 ![Fig 8.5](../asset/demo/image5.png)
 
-# Follow these steps to set up the IVS UGC demo(for dev environment).
-
-link: https://github.com/aws-samples/amazon-ivs-ugc-platform-web-demo?tab=readme-ov-file#deployment
 
 # Now do the following changes in Cognito
 
