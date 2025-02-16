@@ -25,11 +25,13 @@ contentType = "application/json"
 
 prompt_transcript = '''
 Analyze the image and extract the key educational information, including any relevant questions, answers, or educational content. Format the extracted text into a structured, readable format. Just focus on the educational content while maintaining the essence of the original text. Give the transcript as it is.
-Give the translated text into english language. 
+Keep the text as it.
+Compulsory to translate the text into english language. If something is not visisble then dont add anything or if question is not  completely visible then just skip it, dont generate transcript of it. If it is not related to aws cloud then also skip it and give the transcript as "irrelevent" If there are two question and if second question is not visible completely then skip question as well as options, dont generate transcript.
+In this case give the transcript of only first question with there visible option only. dont add anything, give as it is.  Just give the english converted one, dont give both transcript and transcript converted in english language. For same question give same transcript every time.
 '''
 
 prompt_compare_transcript = '''
-If the similarity between two transcripts is greater than 80%, return "result": "True". Otherwise, return "result": "False". Don't give any explaination or code.
+If the similarity between two transcripts is greater than 60%, return "result": "True". Otherwise, return "result": "False". Don't give any explaination or code.
 
 You are tasked with comparing two transcripts,
 Transcript A: [{}]
@@ -40,8 +42,8 @@ Transcript B: [{}]
 '''
 
 prompt_generate_question = '''
-Case 1: Assume the role of a AWS Cloud teacher, If the transcript contains a question, use the same question directly for the multiple-choice question generation. If not, formulate a new multiple-choice question based on the generated transcript to assess student attentiveness in class. Assume your role as AWS cloud teacher teaching students for cloud certification. Your job is to take test of student by generating questions which are relevent to them. 
-Generate question from transcript only. Don't include text inside [] bracket in transcript, or dont include date or footprint, only consider content realted to cloud.  The question should include four options, with one correct answer. Return the output in the following JSON format and without additional commentary and generate question only in english language:
+Case 1: Assume the role of a teacher, If the transcript contains a question, use the same question directly for the multiple-choice question generation. If not, formulate a new multiple-choice question based on the generated transcript to assess student attentiveness in class. Assume your role as aws cloud teacher teaching students of class 12 preparing for exams. Your job is to take test of student by generating questions which are relevent to them. Generate question only if transcript is realted to aws cloud.
+First you see the image shared of a digital-board. extract text from the screen, ignore written text on t-shirts, human, branding of  Adda247 Also dont consider anything written in bold. Generate question from transcript only. Don't include text inside [] bracket in transcript. Check if question is relevant with option, then only consider it. The question should include four options, with one correct answer. Return the output in the following JSON format and without additional commentary and generate question only in english language:
 {
 "question": "<generated question>",
 "options": ["<option 1>", "<option 2>", "<option 3>", "<option 4>"],
@@ -50,14 +52,13 @@ Generate question from transcript only. Don't include text inside [] bracket in 
 }
 
 Case 2: Do not generate a question if the image:
-- dont ask question regarding size of file, or date of PPT, only ask question related to educational content.
+- dont ask question regarding size of file
 - Contains only a logo or irrelevant graphics such as simple shapes, colors, generic symbols, or specific letters.
 - Displays single words, a Welcome page, or any screenshots that show a desktop or application interface. This includes browsers, pdf, chat applications, and any visible file management or folder structure, or if any thing forwarded in chat.
 - Features file-related information visible on a computer or device screen, such as file names, sizes, types, or chat messages and document names.
 - Contains fewer than 8 total words where the text does not provide substantial content for creating a meaningful educational question.
 - Shows handwritten content on a chalkboard.
 - Includes background elements or text that do not contribute directly to a meaningful educational topic or context.
-- Do not generate question like by mentioning word like AWS
 
 If an image meets any of the above criteria and is deemed not suitable for question generation, return the following JSON response:
 {
@@ -184,10 +185,10 @@ def lambda_handler(event, context):
     print(">>>>>>>>>>>", transcript_compare)
 
     match_or_not = False
-    # if '"result": "True"' in transcript_compare:
-    #     match_or_not = True
+    if '"result": "True"' in transcript_compare:
+        match_or_not = True
 
-    # print("-----------",match_or_not)
+    print("-----------",match_or_not)
 
     if match_or_not == True:
         print("Question already generated, Not generating question.............")
@@ -252,3 +253,4 @@ def lambda_handler(event, context):
         'statusCode': 200,
         'body': json.dumps('Successfully done...')
     }
+

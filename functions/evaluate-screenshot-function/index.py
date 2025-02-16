@@ -3,11 +3,33 @@ import boto3
 import requests
 import json
 from lzstring import LZString
+import os
 
 lz = LZString()
+url_link = None
+client_id = None
+username = None
+password = None
 
-url_link = "DUMMY.cloudfront.net/channel/actions/send"
-client_id = "YOUR_CLIENTID"
+try:
+    url_link = os.environ.get("url_link")
+except:
+    url_link = None
+
+try:
+    client_id = os.environ.get("client_id")
+except:
+    client_id = None
+
+try:
+    username = os.environ.get("username")
+except:
+    username = None
+
+try:
+    password = os.environ.get("password")
+except:
+    password = None
 
 def pack(metadata_obj):
     json_str = json.dumps(metadata_obj)
@@ -74,40 +96,55 @@ def send_action(metadata, access_token):
         print(f"An error occurred: {e}")
 
 def lambda_handler(event, context):
-    with open('env', 'r') as file:
-        for line in file:
-            if line.startswith('username='):
-                username = line.strip().split('=')[1]
-            elif line.startswith('password='):
-                password = line.strip().split('=')[1]
+    # with open('env', 'r') as file:
+    #     for line in file:
+    #         if line.startswith('username='):
+    #             username = line.strip().split('=')[1]
+    #         elif line.startswith('password='):
+    #             password = line.strip().split('=')[1]
    
+    print(url_link, " ------====------ ")
+
     body = json.loads(event['Records'][0]['body'])
     question = body["Question"]
     options = body["Options"]
     solution = body['Solution']
     options = body['Options']
     solution_index = options.index(solution)
+    print("****************")
+    print(question)
+    print("****************")
+    print(options)
+    print("****************")
+    print(solution)
+    print("****************")
 
-    # Authenticate user and get the access token
-    access_token = authenticate_user(username, password)
+    if(client_id):
+        # Authenticate user and get the access token
+        access_token = authenticate_user(username, password)
 
-    # '{"data":{"question":"what is yuour name","answers":["1341313","31313131","131313113"],"correctAnswerIndex":0,"duration":15},"name":"quiz"}'
+        # '{"data":{"question":"what is yuour name","answers":["1341313","31313131","131313113"],"correctAnswerIndex":0,"duration":15},"name":"quiz"}'
+    
+        json_ques_ans = {
+            "data" : {
+                "question" : question,
+                "answers" : options,
+                "correctAnswerIndex" : solution_index,
+                "duration" : 30
+            },
+            "name" : "quiz"
+        }
+    
+        metadata = pack(json_ques_ans)
+    
+        send_action(metadata, access_token)
    
-    json_ques_ans = {
-        "data" : {
-            "question" : question,
-            "answers" : options,
-            "correctAnswerIndex" : solution_index,
-            "duration" : 30
-        },
-        "name" : "quiz"
-    }
-   
-    metadata = pack(json_ques_ans)
-   
-    send_action(metadata, access_token)
-   
-    return {
-        'statusCode': 200,
-        'body': json.dumps({'access_token': access_token})
-    }
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'access_token': access_token})
+        }
+    else:
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Seems like it is not integerated with IVS'})
+        }
