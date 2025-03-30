@@ -9,9 +9,9 @@ Add the following four environment variables and their respective values:
 3. username: Set the value to your UGC demo username.
 4. password: Set the value to your UGC demo password.
 
-![Fig 7.2](../asset/cognito/image12.png)
+![Fig 7.2](../asset/cognito/image5.png)
 
-Step-2: To obtain client_id go to the Cognito console, open the user pool associated with your application and click on the your channel under **User Pool Name**.
+Step-2: To obtain client_id go to the Cognito console, open the user pool associated with your application and click on the your channel under **User Pools**.
 
 ![Fig 7.2](../asset/cognito/image1.png)
 
@@ -22,8 +22,6 @@ Step-2: To obtain client_id go to the Cognito console, open the user pool associ
 ![Fig 7.2](../asset/cognito/image3.png)
 
 Step-4: Paste the copied client ID and add it as environment variable.
-
-![Fig 7.2](../asset/cognito/image12.png)
 
 Step-5: Now Update the API URL
 
@@ -50,7 +48,7 @@ NOTE: To get UGC Demo login ID and password, you need to open "frontendAppBaseUr
 
 Go to the Cognito Console, under user pool, you will find the the created channel.
 
-Open your channel. In the left panel, navigate to Authentication and expand it. Click on Extensions, where you will find Lambda Triggers. From this section, delete all the Lambda Triggers.
+Open your **Channel**. In the left panel, navigate to **Authentication** and expand it. Click on **Extensions**, where you will find **Lambda Triggers**. From this section, delete all the Lambda Triggers.
 
 
 # Integration of IVS UGC Demo with the solution to generate Question based upon captured Screenshot.
