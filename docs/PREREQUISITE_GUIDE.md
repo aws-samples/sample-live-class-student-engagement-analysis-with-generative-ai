@@ -24,11 +24,11 @@ After obtaining the access key and secret key, use them to configure AWS CLI:
 
  aws configure
 
-Step 5. Enable Amazon Bedrock Claude 3.5 Sonet  Model access: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
+Step 5. Enable Amazon Bedrock Claude 3 Sonet  Model access: https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html
 
-To verify if you have access to the Claude 3.5 Sonet model, run the following command:
+To verify if you have access to the Claude 3 Sonet model, run the following command:
 
- aws bedrock list-foundation-models | grep "claude-3-5-sonnet"
+ aws bedrock list-foundation-models | grep "claude-3-sonnet"
 
 Optionally, you can follow the steps below to enable Amazon Bedrock model access:
 

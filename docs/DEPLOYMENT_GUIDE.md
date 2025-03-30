@@ -31,8 +31,8 @@ Once the deploy is complete, the output will look like below in the terminal:
 
 ![Fig 7.2](../asset/sam-output/image3.png)
 
-Note: Make sure to copy the S3 bucket name once the deployment is complete, as it will be needed for future references.   
-
+Note: Make sure to copy the S3 bucket name once the deployment is complete, as it will be needed for future references. 
 
 Afterwards, go to CloudFormation. Within 1-2 minutes, you’ll see the stack created. From there, you can access any resources by clicking on the physical ID.
 
+Note: In CloudFormation resources, you will find a Lambda function named LambdaFunctionForQuesAndTranscript. This Lambda function contains the logic for processing screenshots and generating questions. In this lambda function, the prompt is written to generate questions related to AWS Cloud, but you can modify the prompt according to your requirements.
