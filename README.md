@@ -71,4 +71,4 @@ This functionality allows for personalized feedback and the ability to adapt tea
 
 # License Summary
 
-This sample code is made available under the MIT-0 license. See the LICENSE file.
+This library is licensed under the MIT-0 License. See the LICENSE file.

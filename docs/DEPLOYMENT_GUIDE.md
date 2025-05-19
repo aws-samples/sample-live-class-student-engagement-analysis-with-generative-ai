@@ -2,13 +2,13 @@
 
 Step 1. To obtain all the necessary files locally, run the following command:
 
-`git clone git@ssh.gitlab.aws.dev:wwps-india/ps-prototyping-team/live-class-student-engagement-analysis-with-generative-ai.git`
+`git clone https://github.com/aws-samples/sample-live-class-student-engagement-analysis-with-generative-ai.git`
 
 Alternatively, you can download the provided files directly.
 
-Step-2: Go to the folder "live-class-student-engagement-analysis-with-generative-ai"
+Step-2: Go to the folder "sample-live-class-student-engagement-analysis-with-generative-ai"
 
-   cd live-class-student-engagement-analysis-with-generative-ai
+   cd sample-live-class-student-engagement-analysis-with-generative-ai
 
 Step-3: Then, run the following commands:
 
