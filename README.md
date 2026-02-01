@@ -1,11 +1,10 @@
 # Student attentiveness and engagement analysis in live classrooms with generative AI
 
-The shift to oOnline learning has revolutionized education, offering broader flexibility and accessibility like never before. However, as many educators have discovered, keeping students engaged in a virtual classroom can be a significant challenge. Students often find it difficult to stay focused with ongoing distractions. Teachers also struggle to gauge attentiveness. As a result, it becomes a pressing need to find innovative ways to keep students actively involved in online live classrooms.
+Online learning has revolutionized education, offering broader flexibility and accessibility. However, as many educators have discovered, keeping students engaged in a virtual classroom can be a significant challenge. Students often find it difficult to stay focused with ongoing distractions. Teachers also struggle to gauge attentiveness. As a result, it becomes a pressing need to find innovative ways to keep students actively involved in online live classrooms.
 
-In physical classrooms, teachers use facial cues and student’s expression. By observing these nonverbal signals, teachers can immediately identify whether students are confused, engaged, or losing interest. This helps them manage the classroom in real time, so they know whether to repeat certain concepts or take corrective measures to improve engagement for better outcomes. In online live classrooms, such real-time understanding of students’ understanding and their attentiveness is difficult. Due to network issues,  or students preferring to leave their cameras off, teachers don’t have a good way to understand the classroom’s vibe. 
+In physical classrooms, teachers use facial cues and student’s expression. By observing these nonverbal signals, teachers can immediately identify whether students are confused, engaged, or losing interest. This helps them manage the classroom in real time, so they know whether to repeat certain concepts or take corrective measures to improve engagement. In online live classrooms, such real-time understanding of students’ understanding and their attentiveness is difficult. Due to network issues,  or students preferring to leave their cameras off, teachers don’t have a good way to understand the classroom’s vibe.
 
-These are the challenges we’re heard from some of our EdTech customers. wWe’ve built a sample solution which allows teachers can use to gauge students’ attentiveness and their understanding in online live classrooms. Teachers can see this data in real time and can take corrective measures to build better learning outcome and engaging classrooms and better learning outcomes.
-
+These are the challenges we’re heard from some of our EdTech customers. We’ve built a sample solution teachers can use to gauge students’ attentiveness and their understanding in online live classrooms. Teachers can see this data in real time and can take corrective measures to build engaging classrooms and better learning outcomes.
 
 # Architecture Diagram & Solution Overview
 
@@ -49,7 +48,7 @@ AWS Lambda function will use [Claude Sonnet 4.0 by Anthropic in Amazon Bedrock](
  
 This prompt is designed for extracting and assessing cloud computing digital-board content only. Before using this prompt, replace *{{expertise}}* with your subject.
 
-Prompt: ```Role: You are a Teaching & Learning Specialist analyzing screenshots of classroom digital-boards to extract educational content.
+Prompt: Role: You are a Teaching & Learning Specialist analyzing screenshots of classroom digital-boards to extract educational content.
 What to analyze: Focus exclusively on text/content visible on the digital-board. Ignore teacher/students, chat, or anything not written on the board.
 Instructions:
 Examine the screenshot of the video class.
@@ -62,7 +61,7 @@ Don’t: Infer, add details, or describe behavior not written on the board.
  
 Output: Provide only one of the following:
 • Summary including only the extracted board content (translated to English), OR
-• The single word “irrelevant”.```
+• The single word “irrelevant”.
 
 #### Store the content description from the captured screen in Amazon DynamoDB
 After the content description is generated from the captured screen, it’s important to confirm that the captured screen isn’t a blank or green screen, a welcome or thank you slide, or a slide with content not related to the topic or similar to an already captured description (for example, if you moved back to a previous slide). This helps the solution generate a quiz or poll for only a valid captured screen. These These scenarios validations are being handled inside AWS Lambda function named 'LambdaFunctionForQuesAndTranscript'. After the screen capture is validated, the function stores it inside Amazon DynamoDB.
@@ -71,7 +70,7 @@ After the content description is generated from the captured screen, it’s impo
 
 After storing the content description, the function now generates a quiz or poll using the stored content description. It uses an Amazon Bedrock LLM to generate the quiz or poll and stores it in Amazon DynamoDB. The following is an example prompt for generating a quiz or poll.
  
-Prompt: Role: ```You are an expert teacher in {{expertise}} designing multiple-choice questions to assess attentiveness and understanding of digital-board content.
+Prompt: Role: You are an expert teacher in {{expertise}} designing multiple-choice questions to assess attentiveness and understanding of digital-board content.
 When to generate questions: Only when the extracted content clearly relates to *{{expertise}}*.
 Requirements for each question:
 
@@ -96,7 +95,6 @@ Each generated question must include four options with one correct answer, ensur
 "solution": "<correct option>",
 "result": "True"
 }
-```
  
 The AWS Lambda function also pushes the generated quiz to the Amazon SQS queue to deliver it to students. This approach allows integration with existing solutions by pulling messages from the queue and delivering them to live-classroom solutions.
 
