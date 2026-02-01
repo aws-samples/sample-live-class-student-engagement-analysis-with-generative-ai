@@ -121,12 +121,15 @@ Setting up the Amazon IVS UGC platform demo is optional, but it allows you to ex
 Follow these guide fFor the pre-requisites required to set up the demo, make sure the following tools are installed :
  
 AWS CLI - [Installing the AWS CLI version 2](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html/)
+
 NodeJS - [Installing Node.js](https://nodejs.org/en/)
+
 Docker - [Installing Docker](https://www.docker.com/get-started/) for Amazon IVS UGC platform demo.
  
 To configure and deploy the demo, complete the steps in the following guides:
  
   [Configure the demo](https://github.com/aws-samples/amazon-ivs-ugc-platform-web-demo?tab=readme-ov-file#configuration)
+
   [Deploy the demo](https://github.com/aws-samples/amazon-ivs-ugc-platform-web-demo?tab=readme-ov-file#deployment/])
  
 Follow [Amazon IVS UGC platform integration guide](https://github.com/aws-samples/sample-live-class-student-engagement-analysis-with-generative-ai/blob/main/docs/INTEGRATE_UGC.md/) with sample solution.
@@ -149,10 +152,10 @@ As online education continues to grow, solutions like these will play a crucial 
 
 # About the authors
 
-![Fig 1](./asset/image/image1.png) 
+![Fig 2111](./asset/image/image1.png) 
 
 Neha Jha is a Solutions Architect. She is a builder who enjoys helping customers accomplish their business needs and solve complex challenges with AWS solutions and best practices. Outside her professional life, Neha enjoys painting, cooking, and dancing.
 
-![Fig 1](./asset/image/image2.png) 
+![Fig 3121](./asset/image/image2.png) 
 
 Irshad Chohan is a Principal solutions architect with 18+ years of experience in education, healthcare and other Industry. He collaborates with startups, universities, and government bodies to achieve equitable education, leveraging his passion for simplifying complex systems to scale innovative solutions. Being former edtech CTO himself, he drives now transformative education initiatives across India with AWS.
