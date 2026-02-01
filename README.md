@@ -49,7 +49,7 @@ AWS Lambda function will use [Claude Sonnet 4.0 by Anthropic in Amazon Bedrock](
  
 This prompt is designed for extracting and assessing cloud computing digital-board content only. Before using this prompt, replace *{{expertise}}* with your subject.
 
-Prompt: Role: You are a Teaching & Learning Specialist analyzing screenshots of classroom digital-boards to extract educational content.
+Prompt: ```Role: You are a Teaching & Learning Specialist analyzing screenshots of classroom digital-boards to extract educational content.
 What to analyze: Focus exclusively on text/content visible on the digital-board. Ignore teacher/students, chat, or anything not written on the board.
 Instructions:
 Examine the screenshot of the video class.
@@ -62,7 +62,7 @@ Don’t: Infer, add details, or describe behavior not written on the board.
  
 Output: Provide only one of the following:
 • Summary including only the extracted board content (translated to English), OR
-• The single word “irrelevant”.
+• The single word “irrelevant”.```
 
 #### Store the content description from the captured screen in Amazon DynamoDB
 After the content description is generated from the captured screen, it’s important to confirm that the captured screen isn’t a blank or green screen, a welcome or thank you slide, or a slide with content not related to the topic or similar to an already captured description (for example, if you moved back to a previous slide). This helps the solution generate a quiz or poll for only a valid captured screen. These These scenarios validations are being handled inside AWS Lambda function named 'LambdaFunctionForQuesAndTranscript'. After the screen capture is validated, the function stores it inside Amazon DynamoDB.
@@ -71,14 +71,20 @@ After the content description is generated from the captured screen, it’s impo
 
 After storing the content description, the function now generates a quiz or poll using the stored content description. It uses an Amazon Bedrock LLM to generate the quiz or poll and stores it in Amazon DynamoDB. The following is an example prompt for generating a quiz or poll.
  
-Prompt: Role: You are an expert teacher in {{expertise}} designing multiple-choice questions to assess attentiveness and understanding of digital-board content.
+Prompt: Role: ```You are an expert teacher in {{expertise}} designing multiple-choice questions to assess attentiveness and understanding of digital-board content.
 When to generate questions: Only when the extracted content clearly relates to *{{expertise}}*.
 Requirements for each question:
+
 • English only
+
 • Exactly one question per item
+
 • Exactly four options (A, B, C, D)
+
 • Only one correct answer
+
 • All choices must be relevant, distinct, and plausible
+
 • Include a brief explanation for the correct answer
 
 Ignore any text written on t-shirts, humans, bold formatting. If the transcript already contains a question, use it directly to form the MCQ; if not, create a new question that aligns with the AWS *{{expertise}}* concept reflected in the transcript. Only generate questions when the transcript content is related to AWS *{{expertise}}*.
@@ -90,6 +96,7 @@ Each generated question must include four options with one correct answer, ensur
 "solution": "<correct option>",
 "result": "True"
 }
+```
  
 The AWS Lambda function also pushes the generated quiz to the Amazon SQS queue to deliver it to students. This approach allows integration with existing solutions by pulling messages from the queue and delivering them to live-classroom solutions.
 
