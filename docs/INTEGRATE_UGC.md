@@ -5,7 +5,7 @@ Step 1: Navigate to the Configuration tab of the Lambda function named "LambdaFu
 Add the following four environment variables and their respective values:
 
 1. client_id: Set the value to the Cognito client.
-2. url_link: Set the value to the appBaseUrl.
+2. url_link: Set the value to the apiBaseUrl.
 3. username: Set the value to your UGC demo username.
 4. password: Set the value to your UGC demo password.
 
@@ -25,7 +25,7 @@ Step-4: Paste the copied client ID and add it as environment variable.
 
 Step-5: Now Update the API URL
 
-Replace the **url_link** value with "appBaseUrl" in the same file.
+Replace the **url_link** value with "apiBaseUrl" in the same file.
 
 -> You can obtain this URL from the CloudFormation stack named UGC dev, found in the output section and append /channel/actions/send at the end.
 
