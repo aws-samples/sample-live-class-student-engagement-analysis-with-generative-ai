@@ -41,7 +41,8 @@ def unpack(metadata_str):
     decompressed_metadata_obj = json.loads(decompressed_json_str)
     return decompressed_metadata_obj
 
-cognito_client = boto3.client('cognito-idp', region_name='us-west-2')
+region = os.environ['AWS_REGION']
+cognito_client = boto3.client('cognito-idp', region_name=region)
 
 def authenticate_user(username, password):
     print("Username:", username)
