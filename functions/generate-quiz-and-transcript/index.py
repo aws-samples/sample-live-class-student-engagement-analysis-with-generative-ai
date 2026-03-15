@@ -18,7 +18,8 @@ table1 = dynamodb.Table(dynamodb_name)
 s3_client = boto3.client('s3')
 sqs = boto3.client('sqs')
 
-modelId = "anthropic.claude-3-sonnet-20240229-v1:0" #"anthropic.claude-3-haiku-20240307-v1:0"
+region_prefix = region.split('-')[0]
+modelId = region_prefix + ".anthropic.claude-sonnet-4-20250514-v1:0" #"anthropic.claude-3-haiku-20240307-v1:0"
 
 accept = "application/json"
 contentType = "application/json"
