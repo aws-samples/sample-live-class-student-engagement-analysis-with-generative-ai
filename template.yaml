@@ -10,23 +10,6 @@ Resources:
       QueueName: ScreenCaptureEventQueue
       VisibilityTimeout: 900
 
-  ScreenCaptureQueuePolicy:
-    Type: AWS::SQS::QueuePolicy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - 
-            Action: 
-              - "SQS:SendMessage" 
-              - "SQS:ReceiveMessage"
-            Effect: "Allow"
-            Resource: "*"
-            Principal:  
-              AWS: "*"     
-      Queues: 
-        - Ref: ScreenCaptureEventQueue
-    DependsOn : ScreenCaptureEventQueue  
-
   QuizEventQueue:
     Type: AWS::SQS::Queue
     Properties:
@@ -40,7 +23,7 @@ Resources:
           QueueConfigurations:
             - Event: s3:ObjectCreated:Put
               Queue: !GetAtt ScreenCaptureEventQueue.Arn
-    DependsOn : ScreenCaptureQueuePolicy
+    DependsOn : ScreenCaptureEventQueuePolicy
 
   ScreenCaptureRecordingConfiguration:
     Type: AWS::IVS::RecordingConfiguration
@@ -173,7 +156,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.lambda_handler
-      Runtime: python3.12
+      Runtime: python3.13
       Timeout: 900
       Role:
         Fn::GetAtt:
@@ -188,6 +171,7 @@ Resources:
             Fn::GetAtt:
             - QuizEventQueue
             - QueueUrl
+          MODEL_ID: global.anthropic.claude-sonnet-4-6
       MemorySize: 256
       Events:
         SQSEvent:
@@ -216,7 +200,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       Handler: index.lambda_handler
-      Runtime: python3.12
+      Runtime: python3.13
       Timeout: 900
       Role:
         Fn::GetAtt:
@@ -243,7 +227,7 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Sid: AllowLambdaAndS3ToSQS
+        - Sid: AllowS3AndLambdaToSQS
           Effect: Allow
           Principal:
             Service:
@@ -252,17 +236,10 @@ Resources:
           Action:
           - sqs:SendMessage
           - sqs:ReceiveMessage
-          - s3:GetObject
           Resource:
             Fn::GetAtt:
             - ScreenCaptureEventQueue
             - Arn
-          Condition:
-            StringEquals:
-              aws:SourceArn:
-                Fn::GetAtt:
-                - ScreenCaptureS3Bucket
-                - Arn
     DependsOn:
     - ScreenCaptureEventQueue
     Metadata:

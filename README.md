@@ -44,7 +44,7 @@ The Amazon SQS messages get consumed by AWS Lambda function that handles the ent
 
 #### Generate a content description of the captured screenshot using Amazon Bedrock
 
-AWS Lambda function will use [Claude Sonnet 4.0 by Anthropic in Amazon Bedrock](https://aws.amazon.com/bedrock/anthropic/) to infer a textual description from the captured screenshot. You can choose any [large language model (LLM)](https://aws.amazon.com/what-is/large-language-model/) available on Amazon Bedrock that has vision capability. To set proper context and prepare the LLM, we use the following prompt to generate a description of the captured screenshot, which can be content such as text on a presentation slide, or a whiteboard drawing.
+AWS Lambda function will use [Claude Sonnet model by Anthropic in Amazon Bedrock](https://aws.amazon.com/bedrock/anthropic/) via a [cross-region inference profile](https://docs.aws.amazon.com/bedrock/latest/userguide/cross-region-inference.html) (`global.anthropic.claude-sonnet-4-6`) to infer a textual description from the captured screenshot. The global inference profile routes requests to the nearest available region, so the solution works in any AWS region where Amazon Bedrock is available. You can choose any [large language model (LLM)](https://aws.amazon.com/what-is/large-language-model/) available on Amazon Bedrock that has vision capability. To set proper context and prepare the LLM, we use the following prompt to generate a description of the captured screenshot, which can be content such as text on a presentation slide, or a whiteboard drawing.
  
 This prompt is designed for extracting and assessing cloud computing digital-board content only. Before using this prompt, replace *{{expertise}}* with your subject.
 
@@ -113,7 +113,13 @@ You can try this demo by uploading a captured screenshot to the Amazon S3 bucket
  
 To run the demo, follow these steps:
 
-1. Navigate to the [Amazon S3 console](https://eu-north-1.signin.aws.amazon.com/oauth?client_id=arn%3Aaws%3Asignin%3A%3A%3Aconsole%2Fs3tb&code_challenge=t0OIDi3_5oMaqLlLCAP-SopM5-rIA4tBpw6OEdYYlX8&code_challenge_method=SHA-256&response_type=code&redirect_uri=https%3A%2F%2Fconsole.aws.amazon.com%2Fs3%2F%3Fca-oauth-flow-id%3D3268%26hashArgs%3D%2523%26isauthcode%3Dtrue%26oauthStart%3D1769953910508%26state%3DhashArgsFromTB_eu-north-1_ba9efffa8f9dcd2d/) and locate the Amazon S3 bucket created using the [AWS Serverless Application Model (AWS SAM)](https://aws.amazon.com/serverless/sam/). You can use the sample_screenshot image located under the asset folder to test. To upload files to the bucket directory, follow the guide at Uploading objects to a directory bucket in the Amazon S3 User Guide. You must create a folder first and then upload the image.
+1. Upload a sample screenshot to the S3 bucket created by [AWS SAM](https://aws.amazon.com/serverless/sam/). You can use the `sample_screenshot/image1.png` image located under the `asset` folder. You must create a folder first and then upload the image inside it:
+
+```bash
+aws s3 cp asset/sample_screenshot/image1.png s3://<YOUR_BUCKET_NAME>/test/class1/image1.png --region <YOUR_REGION>
+```
+
+You can find the bucket name in the CloudFormation stack outputs under `ScreenCaptureS3Bucket`.
 
 2.	It will trigger the rest of the flow of the architecture and you will be able to see the processing log of the final Lambda function with the name LambdaFunctionToRecieveUniqueQuestion. To access the log of AWS Lambda function, follow the steps at AWS Lambda Developer Guide > [Access function logs using the console](https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs-view.html#monitoring-cloudwatchlogs-console).
 

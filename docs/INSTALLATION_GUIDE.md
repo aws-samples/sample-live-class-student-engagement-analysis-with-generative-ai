@@ -7,4 +7,4 @@
 
 3. sam build
 
-4. sam deploy —guided (with default options)
+4. sam deploy --guided --capabilities CAPABILITY_IAM

@@ -14,12 +14,12 @@ To check if SAM CLI is installed, use the following command:
 
   sam --version
 
-Step 4. Having AWS profile with AWS account administrative access.
+Step 4. AWS CLI configured with valid credentials that have administrative access.
 
-To create an IAM user with administrative access, follow this guide: https://docs.aws.amazon.com/streams/latest/dev/setting-up.html
+You can use IAM Identity Center (SSO), IAM user credentials, or any supported authentication method. To verify your credentials are working:
 
-Once the IAM user is created, generate secret credentials by following this guide: https://docs.aws.amazon.com/cli/v1/userguide/cli-authentication-user.html#cli-authentication-user-create
+ aws sts get-caller-identity
 
-After obtaining the access key and secret key, use them to configure AWS CLI:
-
+     or use
+ 
  aws configure

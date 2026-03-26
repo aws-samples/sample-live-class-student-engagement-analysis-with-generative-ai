@@ -1,4 +1,4 @@
-## Now Deploy the SAM template to launch all the resources
+## Now Deploy the AWS SAM template to launch all the resources
 
 Step 1. To obtain all the necessary files locally, run the following command:
 
@@ -20,7 +20,7 @@ Once the build is complete, the output will look like below in the terminal:
 
 ![Fig 7.2](../asset/sam-output/image1.png)
 
-    sam deploy --guided
+    sam deploy --guided --capabilities CAPABILITY_IAM
 
 
 Step-4: It will prompt you for the stack name, AWS Region and S3 bucket name. Provide the stack name and S3 bucket name. For the rest of the parameters, you can either provide a value or leave them blank to accept the default values.

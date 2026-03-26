@@ -1,6 +1,5 @@
 import boto3
 import json
-import base64
 from botocore.exceptions import ClientError
 import datetime
 import time
@@ -12,14 +11,13 @@ region = os.environ['AWS_REGION']
 
 bedrock = boto3.client(service_name="bedrock-runtime",region_name=region)
 dynamodb = boto3.resource('dynamodb', region_name=region)
-dynamodb_name = os.environ['DYNAMODB_NAME'] #"question-bot-haiku-ddbtable-13579"
+dynamodb_name = os.environ['DYNAMODB_NAME']
 queue_url = os.environ['QUEUE_URL'] 
 table1 = dynamodb.Table(dynamodb_name)
 s3_client = boto3.client('s3')
 sqs = boto3.client('sqs')
 
-region_prefix = region.split('-')[0]
-modelId = region_prefix + ".anthropic.claude-sonnet-4-20250514-v1:0" #"anthropic.claude-3-haiku-20240307-v1:0"
+modelId = os.environ.get('MODEL_ID', 'global.anthropic.claude-sonnet-4-6')
 
 accept = "application/json"
 contentType = "application/json"
@@ -89,63 +87,28 @@ def get_latest_entry(table_name, path):
     else:
         return None  # No entries found for the given date
 
-def get_data_from_model(prompt, image):
-    request_body = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 2048,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    },
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/jpeg",
-                            "data": image,
-                        },
-                    },
-                ],
-            }
-        ],
-    }
+def get_image_format(key):
+    ext = key.rsplit('.', 1)[-1].lower()
+    return {"png": "png", "jpg": "jpeg", "jpeg": "jpeg", "gif": "gif", "webp": "webp"}.get(ext, "jpeg")
 
-    # Invoke haiku model to get transcript
-    response = bedrock.invoke_model(
-        modelId=modelId,
-        body=json.dumps(request_body),
-    )
-    result = json.loads(response.get("body").read())
-    return result
+def get_data_from_model(prompt, image_bytes, image_format="jpeg"):
+    message = {
+        "role": "user",
+        "content": [
+            {"text": prompt},
+            {"image": {"format": image_format, "source": {"bytes": image_bytes}}}
+        ]
+    }
+    response = bedrock.converse(modelId=modelId, messages=[message], inferenceConfig={"maxTokens": 2048})
+    return response['output']['message']['content'][0]['text']
 
 def get_result_from_model(prompt):
-    request_body = {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 2048,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": prompt,
-                    }
-                ],
-            }
-        ],
+    message = {
+        "role": "user",
+        "content": [{"text": prompt}]
     }
-
-    # Invoke haiku model to get transcript
-    response = bedrock.invoke_model(
-        modelId=modelId,
-        body=json.dumps(request_body),
-    )
-    result = json.loads(response.get("body").read())
-    return result
+    response = bedrock.converse(modelId=modelId, messages=[message], inferenceConfig={"maxTokens": 2048})
+    return response['output']['message']['content'][0]['text']
 
 def lambda_handler(event, context):
     ########### Read it from sqs
@@ -170,19 +133,16 @@ def lambda_handler(event, context):
     s3_client.download_file(bucket, key, local_path)
 
     with open(local_path, "rb") as image_file:
-        image = base64.b64encode(image_file.read()).decode("utf8")
+        image_bytes = image_file.read()
 
     last_transcript=get_latest_entry(dynamodb_name,path)
 
-    result = get_data_from_model(prompt_transcript, image)
-    output_list = result.get("content", [])
-    transcript = output_list[0]['text']
+    image_format = get_image_format(key)
+    transcript = get_data_from_model(prompt_transcript, image_bytes, image_format)
     print("=========> ",transcript)
 
     prompt_compare_transcript_new = prompt_compare_transcript.format(last_transcript, transcript)
-    result_compare = get_result_from_model(prompt_compare_transcript_new)
-    output_list_compare = result_compare.get("content", [])
-    transcript_compare = output_list_compare[0]['text']
+    transcript_compare = get_result_from_model(prompt_compare_transcript_new)
     print(">>>>>>>>>>>", transcript_compare)
 
     match_or_not = False
@@ -206,8 +166,7 @@ def lambda_handler(event, context):
         start_prompt = " Given this transcript : " + transcript + "\n\n"
         prompt_generate_question_mod = start_prompt + prompt_generate_question
         result_question = get_result_from_model(prompt_generate_question_mod)
-        output_list_question = result_question.get("content", [])
-        ques_ans_opts_transcript = output_list_question[0]['text']
+        ques_ans_opts_transcript = result_question
         print("\n",ques_ans_opts_transcript)
         if '"result": "False"' in ques_ans_opts_transcript:
             response = table1.put_item(
